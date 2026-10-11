@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jakarta Urban Atlas &mdash; Projects</title>
+<link rel="stylesheet" href="assets/site.css" />
+<script src="assets/site.js" defer></script>
+<style>
+  :root{
+    --ink:#101418; --muted:#5d6874; --line:#e4e8ec;
+    --accent:#ed1c24; --accent-soft:#ffe6e6; --bg-soft:#f2f2f2;
+  }
+
+  /* ---------- page header ---------- */
+  .proj-head{ padding:34px 0 18px; border-bottom:1px solid var(--line); }
+  .proj-head h2{ margin:0 0 8px; font-size:30px; }
+  .proj-head p{ margin:0; color:var(--muted); font-size:14.5px; max-width:760px; line-height:1.7; }
+
+  /* ---------- filters ---------- */
+  .filters{ display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 4px; }
+  .filter{
+    border:1px solid var(--line); background:#fff; color:var(--muted);
+    padding:7px 14px; border-radius:999px; font-size:13px; cursor:pointer;
+    transition:all .18s ease;
+  }
+  .filter:hover{ border-color:var(--accent); color:var(--accent); }
+  .filter.is-active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .count{ font-size:12.5px; color:var(--muted); margin:12px 0 18px; }
+
+  /* ---------- 3-column grid ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .proj{
+    border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff;
+    cursor:pointer; display:flex; flex-direction:column;
+    transition:transform .2s ease, box-shadow .2s ease, opacity .25s ease;
+  }
+  .proj:hover{ transform:translateY(-4px); box-shadow:0 14px 30px rgba(16,20,24,.10); }
+  .proj.is-hidden{ display:none; }
+
+  .proj__media{ position:relative; aspect-ratio:3/2; overflow:hidden; background:var(--bg-soft); }
+  .proj__media img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s ease; }
+  .proj:hover .proj__media img{ transform:scale(1.06); }
+  .proj__year{
+    position:absolute; top:10px; right:10px; background:rgba(16,20,24,.72); color:#fff;
+    font-size:11.5px; letter-spacing:.4px; padding:4px 9px; border-radius:999px; backdrop-filter:blur(3px);
+  }
+  .proj__overlay{
+    position:absolute; inset:0; background:linear-gradient(to top, rgba(16,20,24,.82), rgba(16,20,24,0) 55%);
+    opacity:0; transition:opacity .25s ease; display:flex; align-items:flex-end; padding:14px;
+    width:100%; border:0; color:inherit; font:inherit; text-align:left; text-decoration:none; cursor:pointer;
+  }
+  .proj:hover .proj__overlay{ opacity:1; }
+  .proj__overlay:focus-visible{ opacity:1; outline:3px solid #fff; outline-offset:-6px; }
+  .proj__overlay span{ color:#fff; font-size:12.5px; font-weight:500; letter-spacing:.3px; }
+
+  .proj__body{ padding:15px 16px 18px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .proj__cat{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); font-weight:600; }
+  .proj__title{ margin:0; font-size:15.5px; line-height:1.35; }
+  .proj__place{ margin:0; font-size:13px; color:var(--muted); }
+  .proj__role{ margin-top:auto; padding-top:8px; font-size:12px; color:var(--muted); border-top:1px dashed var(--line); }
+
+  /* ---------- lightbox ---------- */
+  .lb{
+    position:fixed; inset:0; background:rgba(10,13,16,.86); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; padding:28px; z-index:999;
+  }
+  .lb.is-open{ display:flex; }
+  .lb__box{
+    background:#fff; border-radius:16px; max-width:1040px; width:100%; max-height:90vh;
+    overflow:auto; position:relative; animation:pop .22s ease;
+  }
+  @keyframes pop{ from{ transform:scale(.97); opacity:0 } to{ transform:scale(1); opacity:1 } }
+  .lb__img{ width:100%; display:block; }
+  .lb__content{ padding:22px 26px 28px; }
+  .lb__cat{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); font-weight:600; }
+  .lb__title{ margin:5px 0 4px; font-size:22px; }
+  .lb__meta{ margin:0 0 14px; color:var(--muted); font-size:13.5px; }
+  .lb__body{ margin:0 0 16px; font-size:14px; color:#39424d; line-height:1.75; }
+  .lb__tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .lb__tag{ background:var(--accent-soft); color:#144a9e; font-size:12px; padding:5px 11px; border-radius:999px; }
+  .lb__close{
+    position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%;
+    border:0; background:rgba(16,20,24,.65); color:#fff; font-size:18px; cursor:pointer; line-height:1;
+  }
+  .lb__close:hover{ background:rgba(16,20,24,.9); }
+  .lb__nav{
+    display:flex; justify-content:space-between; gap:12px; padding:0 26px 22px;
+  }
+  .lb__navbtn{
+    border:1px solid var(--line); background:#fff; color:var(--muted);
+    padding:8px 16px; border-radius:999px; font-size:13px; cursor:pointer;
+  }
+  .lb__navbtn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .note{ font-size:12px; color:var(--muted); margin:26px 0 0; font-style:italic; }
+
+  @media (max-width:980px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav__brand">Jakarta <span>Urban Atlas</span></div>
+  <div class="nav__links">
+    <a href="index.html">Home</a>
+    <span class="nav__sep">|</span>
+    <a href="map.html">Map</a>
+    <span class="nav__sep">|</span>
+    <a href="projects.html" class="is-active">Projects</a>
+    <span class="nav__sep">|</span>
+    <a href="about.html">About</a>
+    <span class="nav__sep">|</span>
+    <a href="phd.html">PhD</a>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="section">
+
+    <div class="proj-head">
+      <h2>Projects</h2>
+      <p>Selected urban design and masterplanning work across Southeast Asia &mdash; from island
+         infrastructure strategy and industrial township planning to transit corridors and community
+         public space. Click any project to open the full description.</p>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter is-active" data-cat="all">All</button>
+      <button class="filter" data-cat="Masterplanning">Masterplanning</button>
+      <button class="filter" data-cat="Mobility &amp; TOD">Mobility &amp; TOD</button>
+      <button class="filter" data-cat="Urban Strategy">Urban Strategy</button>
+      <button class="filter" data-cat="Public Realm">Public Realm</button>
+    </div>
+    <div class="count" id="count"></div>
+
+    <div class="grid" id="grid"></div>
+
+    <p class="note">Imagery is AI-generated for presentation purposes and is indicative only &mdash;
+       not a record of delivered project drawings.</p>
+
+  </section>
+</main>
+
+<!-- ===================== LIGHTBOX ===================== -->
+<div class="lb" id="lb">
+  <div class="lb__box">
+    <button class="lb__close" id="lbClose" aria-label="Close">&times;</button>
+    <img class="lb__img" id="lbImg" src="" alt="" />
+    <div class="lb__content">
+      <div class="lb__cat" id="lbCat"></div>
+      <h3 class="lb__title" id="lbTitle"></h3>
+      <p class="lb__meta" id="lbMeta"></p>
+      <p class="lb__body" id="lbBody"></p>
+      <div class="lb__tags" id="lbTags"></div>
+    </div>
+    <div class="lb__nav">
+      <button class="lb__navbtn" id="lbPrev">&larr; Previous</button>
+      <button class="lb__navbtn" id="lbNext">Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  Jakarta Urban Atlas &middot; Built with Mapbox GL JS
+</footer>
+
+<script>
+/* ============ PROJECT DATA ============ */
+var PROJECTS = [
+  {
+    img:'assets/img/01-kura-kura-bali.png',
+    cat:'Masterplanning',
+    title:'Masterplan &amp; Infrastructure Improvement',
+    link:'project-kura-kura-bali.html',
+    place:'Kura-Kura Bali, Indonesia',
+    year:'2026&ndash;Present',
+    role:'Planning coordination lead',
+    body:"Led planning coordination for the enhancement of Kura-Kura Bali's infrastructure strategy, aligning infrastructure planning, utilities, resilience objectives and development phasing with a 500-hectare mixed-use island masterplan. Directed development data reviews, spatial analysis, stakeholder coordination and multidisciplinary collaboration to support integrated infrastructure planning and long-term sustainable growth.",
+    tags:['500 ha','Mixed-use island','Infrastructure strategy','Phasing']
+  },
+  {
+    img:'assets/img/02-medellin-cebu.png',
+    cat:'Masterplanning',
+    title:'Medellin Visioning Masterplan',
+    place:'Northern Cebu, The Philippines',
+    year:'2026&ndash;Present',
+    role:'Urban designer',
+    body:'Urban designer on a 1,000+ hectare township development in Northern Cebu. Contributed GIS-based site analysis, multi-criteria suitability assessments, land use planning, scenario testing, baseline studies and client presentation material, while coordinating multidisciplinary inputs for a resilient, mixed-use masterplan focused on economic growth, tourism, innovation and sustainable urban development.',
+    tags:['1,000+ ha','Suitability analysis','Scenario testing','Township']
+  },
+  {
+    img:'assets/img/03-corridor-tod.png',
+    cat:'Mobility &amp; TOD',
+    title:'Integrated Corridor Development',
+    place:'Bandung Basin Metropolitan Area, Indonesia',
+    year:'2025&ndash;Present',
+    role:'TOD planning lead',
+    body:'Driving TOD planning and spatial development strategies for the Bandung Basin Metropolitan Area, supporting BRT implementation through station area planning, mobility integration and urban regeneration. Applied TOD assessment frameworks, developed urban design concepts and NMT networks, and delivered spatial analysis, stakeholder engagement material and implementation guidance for scalable TOD delivery across Indonesia.',
+    tags:['TOD','BRT','Station area planning','NMT networks']
+  },
+  {
+    img:'assets/img/04-green-sez.png',
+    cat:'Masterplanning',
+    title:'Green Special Economic Zone',
+    link:'project-green-sez.html',
+    place:'Cambodia',
+    year:'2025',
+    role:'Urban designer',
+    body:'Shaped the masterplan for a 150-hectare Green Special Economic Zone through land-use frameworks, green infrastructure strategies, public realm concepts and connectivity plans. Coordinated with infrastructure and policy specialists to create a resilient, investment-ready industrial ecosystem supporting ESG, circular economy and renewable energy objectives.',
+    tags:['150 ha','ESG','Circular economy','Green infrastructure']
+  },
+  {
+    img:'assets/img/05-industrial-township.png',
+    cat:'Masterplanning',
+    title:'Industrial Estate Master Plan Development',
+    place:'Indonesia',
+    year:'2023&ndash;2025',
+    role:'Digital Integration Lead &amp; Urban Designer',
+    body:'Digital Integration Lead and Urban Designer for a 2,400-hectare industrial township masterplan, driving multidisciplinary coordination across planning, infrastructure, transport, sustainability and engineering. Streamlined delivery through advanced GIS&ndash;CAD&ndash;FME workflows, developed strategic land use frameworks and supported a future-ready industrial community integrating residential, commercial and industrial functions.',
+    tags:['2,400 ha','GIS–CAD–FME','Land use framework','Digital delivery']
+  },
+  {
+    img:'assets/img/06-climate-smart-jakarta.png',
+    cat:'Urban Strategy',
+    title:'Climate-Smart Urban Transformation',
+    place:'Jakarta, Indonesia',
+    year:'2023&ndash;2024',
+    role:'Spatial analysis lead',
+    body:'Led spatial analysis, opportunity assessments and urban transformation studies supporting climate-smart development strategies for Jakarta. Developed evidence-based planning frameworks, conducted multi-criteria evaluations and identified priority intervention areas for resilience, regeneration, public realm, mobility and sustainable growth.',
+    tags:['Climate resilience','Multi-criteria analysis','Regeneration','Evidence-based planning']
+  },
+  {
+    img:'assets/img/07-sarbagita-brt.png',
+    cat:'Mobility &amp; TOD',
+    title:'Sarbagita eBus Rapid Transit System',
+    place:'Bali, Indonesia',
+    year:'2023&ndash;2024',
+    role:'Urban design lead',
+    body:"Led urban design development of station typologies, public realm interventions and corridor integration strategies for Bali's eBus Rapid Transit programme. Developed context-sensitive solutions reflecting local culture, climate and mobility needs, coordinating with transport, structural and infrastructure teams to deliver integrated design outcomes.",
+    tags:['eBRT','Station typology','Corridor integration','Local identity']
+  },
+  {
+    img:'assets/img/08-nusantara.png',
+    cat:'Urban Strategy',
+    title:'Scoping Study &mdash; Liveable and Lovable Nusantara',
+    place:'Nusantara, Indonesia',
+    year:'2023&ndash;2024',
+    role:'Research &amp; visual communication',
+    body:"ADB-funded strategic advisory study for Indonesia's new capital, focused on identifying transformative investment opportunities and enhancing long-term liveability. Delivered research, international benchmarking, visual communication material and stakeholder engagement outputs, translating complex planning strategies into compelling narratives that informed investment prioritisation.",
+    tags:['ADB','Liveability','Benchmarking','Investment prioritisation']
+  },
+  {
+    img:'assets/img/09-pandeglang.png',
+    cat:'Public Realm',
+    title:'Open Public Space Regeneration',
+    place:'Pandeglang, Indonesia',
+    year:'2016&ndash;2018',
+    role:'Design lead',
+    body:'Led regeneration of twelve underutilised public spaces across Pandeglang, transforming neglected sites into accessible, community-focused destinations that enhance walkability, public life and environmental quality. Directed concept development, streetscape strategies and public realm proposals, produced visualisations and technical documentation, and managed stakeholder engagement with local government.',
+    tags:['12 sites','Streetscape','Walkability','Community engagement']
+  }
+];
+
+/* ============ RENDER GRID ============ */
+var grid = document.getElementById('grid');
+var countEl = document.getElementById('count');
+
+grid.innerHTML = PROJECTS.map(function(p, i){
+  var overlay = p.link
+    ? '<a class="proj__overlay" href="' + p.link + '" aria-label="View project: ' + p.title.replace(/&[a-z]+;/g,'') + '"><span>View project &rarr;</span></a>'
+    : '<button class="proj__overlay" type="button" aria-label="View project: ' + p.title.replace(/&[a-z]+;/g,'') + '"><span>View project &rarr;</span></button>';
+  return '<article class="proj" data-cat="' + p.cat + '" data-i="' + i + '">' +
+    '<div class="proj__media">' +
+      '<img src="' + p.img + '" alt="' + p.title.replace(/&[a-z]+;/g,'') + '" loading="lazy" />' +
+      '<span class="proj__year">' + p.year + '</span>' +
+      overlay +
+    '</div>' +
+    '<div class="proj__body">' +
+      '<div class="proj__cat">' + p.cat + '</div>' +
+      '<h3 class="proj__title">' + p.title + '</h3>' +
+      '<p class="proj__place">' + p.place + '</p>' +
+      '<div class="proj__role">' + p.role + '</div>' +
+    '</div>' +
+  '</article>';
+}).join('');
+
+function updateCount(){
+  var shown = grid.querySelectorAll('.proj:not(.is-hidden)').length;
+  countEl.textContent = 'Showing ' + shown + ' of ' + PROJECTS.length + ' projects';
+}
+updateCount();
+
+/* ============ FILTERS ============ */
+document.getElementById('filters').addEventListener('click', function(e){
+  var btn = e.target.closest('.filter');
+  if (!btn) return;
+  var tabs = this.querySelectorAll('.filter');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('is-active');
+  btn.classList.add('is-active');
+  var cat = btn.getAttribute('data-cat');
+  var cards = grid.querySelectorAll('.proj');
+  for (var j = 0; j < cards.length; j++){
+    var match = (cat === 'all') || (cards[j].getAttribute('data-cat') === cat);
+    cards[j].classList.toggle('is-hidden', !match);
+  }
+  updateCount();
+});
+
+/* ============ LIGHTBOX ============ */
+var lb = document.getElementById('lb');
+var current = 0;
+
+function openLB(i){
+  current = i;
+  var p = PROJECTS[i];
+  document.getElementById('lbImg').src = p.img;
+  document.getElementById('lbImg').alt = p.title.replace(/&[a-z]+;/g,'');
+  document.getElementById('lbCat').innerHTML = p.cat;
+  document.getElementById('lbTitle').innerHTML = p.title;
+  document.getElementById('lbMeta').innerHTML = p.place + ' &middot; ' + p.year + ' &middot; ' + p.role;
+  document.getElementById('lbBody').innerHTML = p.body;
+  document.getElementById('lbTags').innerHTML = p.tags.map(function(t){
+    return '<span class="lb__tag">' + t + '</span>';
+  }).join('');
+  lb.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLB(){
+  lb.classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
+grid.addEventListener('click', function(e){
+  if (e.target.closest('.proj__overlay[href]')) return;
+  var card = e.target.closest('.proj');
+  if (!card) return;
+  openLB(parseInt(card.getAttribute('data-i'), 10));
+});
+
+document.getElementById('lbClose').addEventListener('click', closeLB);
+lb.addEventListener('click', function(e){ if (e.target === lb) closeLB(); });
+
+document.getElementById('lbPrev').addEventListener('click', function(){
+  openLB((current - 1 + PROJECTS.length) % PROJECTS.length);
+});
+document.getElementById('lbNext').addEventListener('click', function(){
+  openLB((current + 1) % PROJECTS.length);
+});
+
+document.addEventListener('keydown', function(e){
+  if (!lb.classList.contains('is-open')) return;
+  if (e.key === 'Escape') closeLB();
+  if (e.key === 'ArrowLeft') openLB((current - 1 + PROJECTS.length) % PROJECTS.length);
+  if (e.key === 'ArrowRight') openLB((current + 1) % PROJECTS.length);
+});
+</script>
+</body>
+</html>

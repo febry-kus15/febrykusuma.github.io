@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Green Special Economic Zone, Cambodia &mdash; Jakarta Urban Atlas</title>
+<link rel="stylesheet" href="assets/site.css" />
+<script src="assets/site.js" defer></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --ink:#101418; --muted:#5d6874; --line:#e4e8ec;
+    --accent:#ed1c24; --accent-soft:#ffe6e6; --bg-soft:#f2f2f2;
+    --teal:#12b3a8;
+  }
+
+  /* ---------- reading rhythm ---------- */
+  .story{ max-width:760px; margin:0 auto; }
+  .story p{ font-size:15.5px; line-height:1.78; color:#39424d; margin:0 0 18px; }
+  .story h3{ margin:44px 0 6px; font-size:21px; letter-spacing:-.2px; }
+  .story h4{ margin:28px 0 8px; font-size:15.5px; }
+  .eyebrow{
+    font-size:11px; letter-spacing:1.4px; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin:0 0 10px;
+  }
+  .lede{ font-size:18px !important; line-height:1.68 !important; color:#232c35 !important; }
+
+  /* ---------- hero ---------- */
+  .hero{ position:relative; height:clamp(320px,52vh,520px); overflow:hidden; background:#0d1116; }
+  .hero img{ width:100%; height:100%; object-fit:cover; opacity:.62; }
+  .hero__inner{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end;
+    padding:0 24px 34px; max-width:1100px; margin:0 auto; left:0; right:0;
+  }
+  .hero h1{ color:#fff; margin:0 0 10px; font-size:clamp(26px,4.2vw,40px); line-height:1.12; max-width:15ch; }
+  .hero__sub{ color:rgba(255,255,255,.88); font-size:15px; margin:0 0 14px; max-width:60ch; }
+  .hero__tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .hero__tag{
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+    color:#fff; font-size:12px; padding:5px 11px; border-radius:999px; backdrop-filter:blur(4px);
+  }
+  .crumb{ position:absolute; top:20px; left:0; right:0; padding:0 24px; max-width:1100px; margin:0 auto; }
+  .crumb a{ color:rgba(255,255,255,.82); font-size:13px; text-decoration:none; }
+  .crumb a:hover{ color:#fff; text-decoration:underline; }
+
+  /* ---------- fact strip ---------- */
+  .facts{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:1px;
+    background:var(--line); border-bottom:1px solid var(--line);
+  }
+  .fact{ background:#fff; padding:20px 16px; text-align:center; }
+  .fact__num{ font-size:23px; font-weight:700; color:var(--ink); line-height:1.1; }
+  .fact__label{ margin-top:5px; font-size:11px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); }
+
+  /* ---------- pull quote ---------- */
+  .pull{
+    border-left:3px solid var(--accent); padding:4px 0 4px 20px; margin:30px 0;
+    font-size:18px; line-height:1.6; color:#232c35; font-weight:500;
+  }
+
+  /* ---------- figures ---------- */
+  .fig{ margin:32px 0; }
+  .fig--wide{ max-width:1000px; margin-left:auto; margin-right:auto; }
+  .fig img{ width:100%; display:block; border-radius:12px; }
+  .fig figcaption{ margin-top:9px; font-size:12.5px; color:var(--muted); line-height:1.6; }
+
+  /* placeholder slot */
+  .ph{
+    aspect-ratio:3/2; border-radius:12px; border:1.5px dashed #c6d0da;
+    background:
+      repeating-linear-gradient(45deg,#f4f7fa 0 12px,#eef3f8 12px 24px);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:26px; gap:8px;
+  }
+  .ph__icon{ font-size:26px; opacity:.4; }
+  .ph__title{ font-size:13.5px; font-weight:600; color:#48535f; }
+  .ph__hint{ font-size:12px; color:var(--muted); max-width:52ch; line-height:1.6; }
+  .ph__file{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; color:#7a8794; }
+
+  /* ---------- options comparison ---------- */
+  .opts{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:26px 0; }
+  .opt{ border:1px solid var(--line); border-radius:14px; padding:20px; background:#fff; }
+  .opt h4{ margin:0 0 4px; font-size:15.5px; }
+  .opt__tag{ font-size:11px; letter-spacing:.8px; text-transform:uppercase; font-weight:700; margin-bottom:8px; }
+  .opt--1 .opt__tag{ color:var(--accent); }
+  .opt--2 .opt__tag{ color:var(--teal); }
+  .opt ul{ margin:10px 0 0; padding-left:17px; font-size:13.5px; color:var(--muted); line-height:1.75; }
+  .opt__cost{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); font-size:13px; color:var(--ink); }
+  .opt__cost b{ font-size:16px; }
+
+  /* ---------- data table ---------- */
+  .tbl{ width:100%; border-collapse:collapse; margin:20px 0; font-size:13.5px; }
+  .tbl th{
+    text-align:left; padding:10px 12px; background:var(--bg-soft);
+    border-bottom:2px solid var(--line); font-size:11.5px; letter-spacing:.6px;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .tbl td{ padding:10px 12px; border-bottom:1px solid var(--line); color:#39424d; }
+  .tbl tr:last-child td{ border-bottom:0; }
+  .tbl td:first-child{ font-weight:600; color:var(--ink); }
+
+  /* ---------- role callout ---------- */
+  .role{
+    background:var(--bg-soft); border:1px solid var(--line); border-radius:14px;
+    padding:22px 24px; margin:32px 0;
+  }
+  .role h4{ margin:0 0 10px; font-size:15px; }
+  .role ul{ margin:0; padding-left:18px; font-size:14px; color:#39424d; line-height:1.8; }
+
+  /* ---------- map ---------- */
+  .mapbox-wrap{ position:relative; height:460px; border-radius:14px; overflow:hidden;
+                border:1px solid var(--line); margin:22px 0 10px; }
+  #sezmap{ position:absolute; inset:0; }
+  .maplegend{
+    position:absolute; bottom:14px; left:14px; z-index:5; background:rgba(255,255,255,.95);
+    border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:12px; color:var(--muted);
+    backdrop-filter:blur(6px); box-shadow:0 4px 14px rgba(16,20,24,.10);
+  }
+  .maplegend b{ display:block; color:var(--ink); font-size:10.5px; letter-spacing:.8px;
+                text-transform:uppercase; margin-bottom:7px; }
+  .maplegend div{ display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .maplegend div:last-child{ margin-bottom:0; }
+  .swatch{ width:14px; height:10px; border-radius:2px; flex:none; }
+
+  /* ---------- lessons ---------- */
+  .lessons{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:24px 0; }
+  .lesson{ border:1px solid var(--line); border-radius:12px; padding:18px; background:#fff; }
+  .lesson__n{ font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+  .lesson h4{ margin:0 0 6px; font-size:14.5px; }
+  .lesson p{ margin:0; font-size:13px; color:var(--muted); line-height:1.65; }
+
+  /* ---------- nav prev/next ---------- */
+  .pagenav{
+    display:flex; justify-content:space-between; gap:14px; margin:44px 0 0;
+    padding-top:22px; border-top:1px solid var(--line);
+  }
+  .pagenav a{
+    font-size:13.5px; color:var(--accent); text-decoration:none;
+    border:1px solid var(--line); padding:10px 16px; border-radius:999px;
+  }
+  .pagenav a:hover{ border-color:var(--accent); }
+
+  .disclaimer{
+    font-size:12px; color:var(--muted); font-style:italic; line-height:1.7;
+    border-top:1px solid var(--line); padding-top:18px; margin-top:34px;
+  }
+
+  @media (max-width:820px){
+    .facts{ grid-template-columns:repeat(2,1fr); }
+    .opts, .lessons{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav__brand">Jakarta <span>Urban Atlas</span></div>
+  <div class="nav__links">
+    <a href="index.html">Home</a>
+    <span class="nav__sep">|</span>
+    <a href="map.html">Map</a>
+    <span class="nav__sep">|</span>
+    <a href="projects.html" class="is-active">Projects</a>
+    <span class="nav__sep">|</span>
+    <a href="about.html">About</a>
+    <span class="nav__sep">|</span>
+    <a href="phd.html">PhD</a>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <img src="assets/img/04-green-sez.png" alt="Green Special Economic Zone masterplan visualisation" />
+  <div class="crumb"><a href="projects.html">&larr; All projects</a></div>
+  <div class="hero__inner">
+    <p class="eyebrow" style="color:#9fc4ff">Masterplanning &middot; Cambodia &middot; 2025&ndash;2026</p>
+    <h1>Building an industrial zone on a floodplain</h1>
+    <p class="hero__sub">A technical feasibility assessment for a 177-hectare Green Special Economic Zone
+       in Kandal Province &mdash; where the hardest design question was not what to build, but how to keep
+       it dry.</p>
+    <div class="hero__tags">
+      <span class="hero__tag">177 ha</span>
+      <span class="hero__tag">Flood mitigation</span>
+      <span class="hero__tag">BREEAM</span>
+      <span class="hero__tag">Infrastructure strategy</span>
+      <span class="hero__tag">AACE Class 5 costing</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== FACT STRIP ===================== -->
+<div class="facts">
+  <div class="fact"><div class="fact__num">177 ha</div><div class="fact__label">Site area</div></div>
+  <div class="fact"><div class="fact__num">70%</div><div class="fact__label">Development efficiency</div></div>
+  <div class="fact"><div class="fact__num">6.18 m</div><div class="fact__label">1-in-1,000yr flood depth</div></div>
+  <div class="fact"><div class="fact__num">~30,000</div><div class="fact__label">Working population</div></div>
+  <div class="fact"><div class="fact__num">10 yrs</div><div class="fact__label">Delivery programme</div></div>
+</div>
+
+<main class="page">
+  <section class="section story">
+
+    <!-- ===================== THE BRIEF ===================== -->
+    <p class="eyebrow">The brief</p>
+    <p class="lede">Cambodia is preparing to graduate from Least Developed Country status by 2029. To get
+       there, it needs to move beyond garments &mdash; which still make up the majority of its exports &mdash;
+       into higher-value manufacturing. A Green Special Economic Zone was proposed as the vehicle for that
+       shift.</p>
+
+    <p>The study was commissioned under the UK Government's Green Cities, Infrastructure and Energy
+       Programme, funded by the FCDO, and formed the technical sub-package of a wider seven-part feasibility
+       study run with the Royal Government of Cambodia. Our scope was deliberately bounded: establish
+       whether the site could physically be developed, and at what cost. Market demand, investment
+       structuring and the environmental and social impact assessment sat with other teams.</p>
+
+    <p>The site sits in Kien Svay District, Kandal Province &mdash; roughly 35 km southeast of Phnom Penh,
+       3.5 km from the PPAP container terminal at LM17, and 25 km from the new Techo International Airport.
+       On paper, the logistics are excellent.</p>
+
+    <!-- ===================== THE PROBLEM ===================== -->
+    <h3>The problem nobody could design around</h3>
+
+    <p>The site sits inside the Mekong floodplain, on flat ground at roughly +2.5 to +3.5 m above sea level,
+       in what is effectively a shallow basin. It floods. Not occasionally &mdash; annually, through the
+       June-to-October monsoon, with waters typically receding around November or December.</p>
+
+    <figure class="fig fig--wide">
+      <img src="assets/img/sez/01-flooded-site.png" alt="The Green SEZ site under floodwater in the Mekong floodplain" />
+      <figcaption>During the October 2025 site visit the site was entirely inaccessible. The nearest
+        approach was a local road 2.5 km to the north.</figcaption>
+    </figure>
+
+    <p>When the LiDAR topographic survey was flown in January 2026, approximately 92% of the site was still
+       covered by surface water. The survey team had to classify the site into land, shallow water, boat
+       tracks and depressions, then apply measured water depths to estimate ground levels underneath.</p>
+
+    <p class="pull">Fathom global flood modelling indicated inundation up to 6.18 m under a 1-in-1,000-year
+       event &mdash; an elevation of 9.18 m against existing ground of around 3.0 m.</p>
+
+    <p>Flooding here is not purely natural. Local authorities open sluice gates to deliberately flood the
+       basin in support of rice farming, and additional water arrives via Mekong seepage and discharge from
+       Boeng Thum lake to the north. Nobody could tell us the frequency or duration of those gate openings,
+       and no regional hydrological model was available to us. That uncertainty is flagged throughout the
+       report as something capable of invalidating key findings.</p>
+
+    <!-- ===================== TWO OPTIONS ===================== -->
+    <h3>Two ways to stay dry</h3>
+
+    <p>Rather than prescribe a single answer, we developed two masterplan options distinguished almost
+       entirely by their approach to flood mitigation. Both draw on local precedent: the full-fill approach
+       mirrors nearby Suvannaphum SEZ, while the dyke approach follows Techo International Airport.</p>
+
+    <div class="opts">
+      <div class="opt opt--1">
+        <div class="opt__tag">Option 1</div>
+        <h4>Complete fill</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0;line-height:1.7">
+          Raise the entire site above the 1-in-1,000-year flood level, to +10.18 m with 1 m freeboard.</p>
+        <ul>
+          <li>Average fill height 7.18 m</li>
+          <li>12.68 million m&sup3; of imported fill</li>
+          <li>Single central retention pond, full gravity drainage</li>
+          <li>Operates through extreme floods with no mechanical dependency</li>
+        </ul>
+        <div class="opt__cost">CAPEX <b>USD 324.6m</b> &middot; USD 183/m&sup2;</div>
+      </div>
+
+      <div class="opt opt--2">
+        <div class="opt__tag">Option 2</div>
+        <h4>Dyke with partial fill</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0;line-height:1.7">
+          Ring the site with a dyke to +10.18 m, raise the platform only to the 1-in-100-year level, +7.55 m.</p>
+        <ul>
+          <li>Average fill height 4.55 m</li>
+          <li>8.25 million m&sup3; of imported fill &mdash; two thirds of Option 1</li>
+          <li>Perimeter conveyance canal, pump-assisted discharge</li>
+          <li>Lower cost, but ongoing pump maintenance and less usable land</li>
+        </ul>
+        <div class="opt__cost">CAPEX <b>USD 305.6m</b> &middot; USD 172/m&sup2;</div>
+      </div>
+    </div>
+
+    <p>To put the fill volumes in perspective: Option 1 would need roughly 507,200 truck loads at 25 m&sup3;
+       each. Running 100 trucks ten hours a day, with a source within 5 km and year-round access, that is
+       about 1.4 years of continuous hauling &mdash; and no fill source has been identified.</p>
+
+    <figure class="fig fig--wide">
+      <img src="assets/img/sez/02-dyke-section.png" alt="Flood protection dyke and ground treatment section" />
+      <figcaption>Dyke at 1V:3H slopes with a clay core for seepage control, riprap armour and geotextile
+        filtration. Ground treatment uses prefabricated vertical drains at 1.5 m triangular spacing with
+        surcharge preloading.</figcaption>
+    </figure>
+
+    <p>Critically, the two options are <em>functionally equivalent</em> above ground. Same spatial structure,
+       same 70% development efficiency, same plot strategy, same circulation framework, same sustainability
+       targets. The choice between them is not an urban design decision &mdash; it is a question of
+       earthworks risk, constructability, phasing and long-term maintenance.</p>
+
+    <!-- ===================== MASTERPLAN ===================== -->
+    <h3>The masterplan</h3>
+
+    <p>Both options organise around a primary spine road that carries movement, infrastructure and identity.
+       The largest industrial plots sit centrally along that spine for anchor tenants; ready-built factories
+       cluster to the south, where the site's non-rectangular geometry suits finer-grain subdivision.</p>
+
+    <figure class="fig fig--wide">
+      <img src="assets/img/sez/03-masterplan-aerial.png" alt="Illustrative masterplan for the 177-hectare Green SEZ" />
+      <figcaption>Land use is structured around plot flexibility &mdash; parcels can be amalgamated or
+        subdivided without disrupting the estate structure as tenant requirements evolve.</figcaption>
+    </figure>
+
+    <h4>Plot strategy</h4>
+    <p>Lot sizes were set from international benchmarking across Cambodian, Vietnamese, Thai and Philippine
+       industrial estates. The range runs from 0.15 ha ready-built units to 5 ha anchor parcels.</p>
+
+    <table class="tbl">
+      <thead>
+        <tr><th>Type</th><th>Plot area</th><th>Typical dimensions</th><th>Plots</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Industrial XL</td><td>5.0 ha</td><td>200 &times; 250 m</td><td>8</td></tr>
+        <tr><td>Industrial L</td><td>2.0 ha</td><td>125 &times; 160 m</td><td>18</td></tr>
+        <tr><td>Industrial M</td><td>1.0 ha</td><td>80 &times; 125 m</td><td>4</td></tr>
+        <tr><td>Industrial S</td><td>0.5 ha</td><td>50 &times; 100 m</td><td>16</td></tr>
+        <tr><td>Ready-built factory</td><td>0.15 ha</td><td>30 &times; 50 m</td><td>127</td></tr>
+      </tbody>
+    </table>
+
+    <p>All industrial plots carry a 60% building coverage ratio, 1.0 floor area ratio and a mandated 10%
+       green space per parcel &mdash; which lifts the site-wide green and blue provision from 15.8% of public
+       open space to around 22.8% in total.</p>
+
+    <h4>Designing for the people who work there</h4>
+    <p>An estate of this scale carries roughly 30,000 workers. On-site dormitories accommodate about 9,000
+       &mdash; some 30% of the workforce &mdash; reducing commuting demand and associated emissions.</p>
+
+    <p>Social infrastructure is organised into three clusters: food court and retail; healthcare and
+       emergency, including a 24-hour ambulance base and fire station; and an integrated amenity centre.
+       That last one matters. It includes a childcare centre, lactation rooms for nursing mothers,
+       women-only breakrooms, a women's crisis management centre, training facilities and remittance
+       services &mdash; provisions that reflect the fact that Cambodia's manufacturing workforce is
+       predominantly female.</p>
+
+    <figure class="fig fig--wide">
+      <img src="assets/img/sez/04-amenity-hub.png" alt="Workers amenity hub in a tropical industrial estate" />
+      <figcaption>The amenity cluster sits at the junction of the spine and secondary routes, within
+        walking distance of multiple plots.</figcaption>
+    </figure>
+
+    <!-- ===================== MOBILITY ===================== -->
+    <h3>Moving 30,000 people</h3>
+
+    <p>There is no formal public transport near the site today &mdash; movement is by motorbike, tuk-tuk and
+       small truck. The transport strategy therefore builds a self-contained system: two internal e-shuttle
+       loops and one external route, sized to carry around 4,000 employees during peak hour with a fleet of
+       15&ndash;18 electric shuttles, four 150 kW DC chargers, nine transit shelters and a terminal depot.</p>
+
+    <p>Around 2,400 parking spaces are provided across the estate, of which roughly 10% are EV-ready or
+       fitted with chargers, spanning 7 kW for e-motorcycles up to 300 kW for e-trucks and buses. A further
+       10% are wheelchair accessible.</p>
+
+    <figure class="fig fig--wide">
+      <img src="assets/img/sez/05-spine-road.png" alt="Primary spine road through the green industrial estate" />
+      <figcaption>Primary road at 30 m right of way with a 2 m median, 1.5 m footpaths and 1.5 m planting
+        strips on both sides. Around 1,750 trees line the internal network.</figcaption>
+    </figure>
+
+    <p>A four-lane access road connecting to the Ring Road 3 extension is required &mdash; the site currently
+       has none. A multi-criteria assessment of three alignments favoured the eastern RR3 connection: the
+       shortest new build at 4.3 km, no houses affected, minimal environmental impact and the lowest cost.
+       Peak-hour modelling puts the road network at Level of Service A internally and B at the main gate.</p>
+
+    <!-- ===================== MAP ===================== -->
+    <h3>Where it sits</h3>
+    <p>The site occupies a flat basin between the Bassac and Mekong rivers, with the future Funan Techo
+       Canal planned nearby &mdash; an alignment that could materially change the site's hydrology, and
+       about which no information was available to the team.</p>
+
+    <div class="mapbox-wrap">
+      <div id="sezmap"></div>
+      <div class="maplegend">
+        <b>Legend</b>
+        <div><span class="swatch" style="background:rgba(31,111,235,.35);border:1.5px solid #1f6feb"></span> 177 ha project site</div>
+        <div><span class="swatch" style="background:rgba(163,113,247,.14);border:1.5px dashed #a371f7"></span> 1,000 ha future SEZ</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);font-style:italic">Boundaries shown are indicative
+       placeholders at approximate scale, not surveyed extents.</p>
+
+    <!-- ===================== INFRASTRUCTURE ===================== -->
+    <h3>Infrastructure from nothing</h3>
+
+    <p>The site has no utilities whatsoever. Everything connects from outside, and several systems had to be
+       designed as closed loops to reduce that external dependency.</p>
+
+    <table class="tbl">
+      <thead><tr><th>System</th><th>Strategy</th><th>Capacity</th></tr></thead>
+      <tbody>
+        <tr><td>Clean water</td><td>Connection to MPWCIE treatment plant 7 km away, with on-site treatment of retention pond water as reserve</td><td>7.5 MLD</td></tr>
+        <tr><td>Used water</td><td>Centralised treatment, effluent reused for irrigation and flushing</td><td>5 MLD</td></tr>
+        <tr><td>Power</td><td>Dedicated substation, 115/22 kV, connecting to the nearby transmission corridor</td><td>2 &times; 60 MVA</td></tr>
+        <tr><td>Solid waste</td><td>Central materials recovery facility with composting</td><td>4,000 m&sup2;, ~52 t/day</td></tr>
+        <tr><td>Telecoms</td><td>Two meet-me-rooms for redundancy, fibre distribution, 5G transmitters</td><td>~3,500 lines</td></tr>
+      </tbody>
+    </table>
+
+    <p>Water recycling does the heaviest sustainability lifting. A centralised plant prioritising grey and
+       black water reuse delivers around 4,863 m&sup3;/day &mdash; roughly 65% of total estate demand &mdash;
+       which comfortably exceeds the brief's 20% reduction target and substantially cuts reliance on external
+       supply.</p>
+
+    <h4>The green targets, honestly assessed</h4>
+    <p>Of 25 green design elements in the brief, 14 are achievable within this scope. The remaining 11 sit
+       beyond a feasibility study &mdash; energy efficiency measures, GHG accounting per capita, construction
+       waste diversion &mdash; and need detailed design and operational data.</p>
+
+    <p>Renewable energy is where the plan falls short of ambition. Rooftop solar across all industrial lots
+       could deliver around 100 GWh annually, about 30% of the estate's 329 GWh demand. Add waste-to-energy
+       and you reach roughly 55%. The brief asked for 60% at initial phase and over 80% at build-out. We said
+       so plainly, and noted that Renewable Energy Certificates offer a credible route to close the gap.</p>
+
+    <p>On certification, both options could achieve BREEAM ratings of Excellent to Outstanding. Within the
+       credits assessable at this stage, the plan captures 69% for BREEAM Communities and 79% for BREEAM
+       Infrastructure.</p>
+
+    <!-- ===================== COST ===================== -->
+    <h3>What it costs, and why that number is large</h3>
+
+    <p>Regional benchmarks for Southeast Asian industrial parks without major flood mitigation run around
+       USD 120&ndash;150/m&sup2;. This site comes in at USD 172&ndash;183/m&sup2;. The difference is almost
+       entirely flood risk &mdash; earthworks and site formation alone account for 31&ndash;38% of total
+       CAPEX.</p>
+
+    <p>A 2013 JICA study for a nearby 145 ha SEZ estimated USD 60 million. Our figure is roughly five times
+       that, and we spent a full section of the report explaining why the two are not comparable: thirteen
+       years of cost inflation, a 23% larger site, higher platform levels, no reuse of on-site fill material,
+       ground improvement that JICA did not consider, and more than three times the power provision.</p>
+
+    <p class="pull">Flood risk is the dominant technical constraint and the primary driver of cost
+       variability &mdash; potentially more than 35% at concept design stage.</p>
+
+    <!-- ===================== MY ROLE ===================== -->
+    <div class="role">
+      <h4>My contribution</h4>
+      <ul>
+        <li>Prepared and updated the baseline context mapping &mdash; existing utilities, transport and
+            social infrastructure, accessibility and power supply points</li>
+        <li>Produced the green and blue infrastructure diagrams and legends across both masterplan options</li>
+        <li>Contributed to the key transport and accessibility strategy graphics</li>
+        <li>Coordinated diagram revisions against technical reviewer comments through the final
+            sign-off cycle</li>
+      </ul>
+    </div>
+
+    <!-- ===================== WHAT I TOOK AWAY ===================== -->
+    <h3>What I took from it</h3>
+
+    <div class="lessons">
+      <div class="lesson">
+        <div class="lesson__n">01</div>
+        <h4>Say what you don't know</h4>
+        <p>The report opens with "Key Known Unknowns" &mdash; hydrology, the Funan Canal, fill sourcing,
+          the ESIA. Naming them up front made the findings more useful, not less credible.</p>
+      </div>
+      <div class="lesson">
+        <div class="lesson__n">02</div>
+        <h4>Options, not answers</h4>
+        <p>Presenting two technically viable options without a recommendation kept the decision with the
+          people who hold the wider commercial, environmental and policy picture.</p>
+      </div>
+      <div class="lesson">
+        <div class="lesson__n">03</div>
+        <h4>Site conditions set the cost</h4>
+        <p>The urban design barely varies between options. The ground beneath it drives a 35%+ swing in
+          capital cost. Site analysis is not a preliminary &mdash; it is the project.</p>
+      </div>
+    </div>
+
+    <!-- ===================== NAV ===================== -->
+    <div class="pagenav">
+      <a href="projects.html">&larr; All projects</a>
+      <a href="map.html">View on map &rarr;</a>
+    </div>
+
+    <p class="disclaimer">Project delivered by Arup under the UK Government's Green Cities, Infrastructure
+       and Energy Programme (GCIEP), funded by the Foreign, Commonwealth and Development Office and led by
+       PricewaterhouseCoopers LLP. Figures and findings are drawn from the final technical feasibility
+       report and are conceptual, AACE Class 5 level, and subject to the assumptions and exclusions set out
+       in that document. Imagery on this page is AI-generated for presentation purposes and does not
+       represent delivered project drawings.</p>
+
+  </section>
+</main>
+
+<footer class="footer">
+  Jakarta Urban Atlas &middot; Built with Mapbox GL JS
+</footer>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiZmVicnlrdXN1bWEiLCJhIjoiY211ZTkwdnJ4MDE0dDM0cnp6amNvemVpYyJ9.abLQdfDr-H8dJ56manpjSQ';
+
+var map = new mapboxgl.Map({
+  container:'sezmap',
+  style:'mapbox://styles/mapbox/light-v11',
+  center:[103.5228, 10.6270],
+  zoom:11.4
+});
+map.addControl(new mapboxgl.NavigationControl({ showCompass:false }), 'top-right');
+map.scrollZoom.disable();
+
+map.on('load', function(){
+  map.addSource('sez', { type:'geojson', data:'data/project-boundaries.geojson' });
+
+  map.addLayer({
+    id:'sez-fill', type:'fill', source:'sez',
+    filter:['==', ['get','id'], 4],
+    paint:{ 'fill-color':'#1f6feb', 'fill-opacity':0.20 }
+  });
+  map.addLayer({
+    id:'sez-line', type:'line', source:'sez',
+    filter:['==', ['get','id'], 4],
+    paint:{ 'line-color':'#1f6feb', 'line-width':2.6 }
+  });
+
+  var el = document.createElement('div');
+  el.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#1f6feb;border:2.5px solid #fff;'+
+                     'box-shadow:0 3px 10px rgba(16,20,24,.35);display:flex;align-items:center;'+
+                     'justify-content:center;color:#fff;font-size:13px;font-weight:700';
+  el.textContent = '4';
+  new mapboxgl.Marker({ element:el, anchor:'center' })
+    .setLngLat([103.5228, 10.6270])
+    .addTo(map);
+});
+</script>
+</body>
+</html>

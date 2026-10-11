@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jakarta Urban Atlas &mdash; PhD Draft</title>
+<link rel="stylesheet" href="assets/site.css" />
+<script src="assets/site.js" defer></script>
+<style>
+  .phd-hero{
+    padding:42px 0 30px; border-bottom:1px solid var(--line);
+  }
+  .phd-kicker{
+    margin:0 0 10px; color:var(--accent); font-size:12px;
+    font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .phd-hero h1{ margin:0 0 12px; font-size:clamp(30px,5vw,46px); line-height:1.1; }
+  .phd-hero p{ max-width:720px; margin:0; color:var(--ink-soft); font-size:16px; line-height:1.7; }
+  .draft-note{
+    display:inline-block; margin-top:18px; padding:6px 10px; border:1px solid #f0c7ba;
+    border-radius:999px; color:#a83e21; background:#fff7f4; font-size:12px; font-weight:600;
+  }
+  .phd-grid{
+    display:grid; grid-template-columns:1.35fr 1fr; gap:26px; margin-top:30px;
+  }
+  .phd-panel{
+    border:1px solid var(--line); border-radius:12px; padding:20px; background:#fff;
+  }
+  .phd-panel h2{ margin:0 0 10px; font-size:19px; }
+  .phd-panel p{ margin:0; color:var(--ink-soft); line-height:1.7; font-size:14px; }
+  .phd-panel p + p{ margin-top:12px; }
+  .phd-list{ margin:0; padding-left:20px; color:var(--ink-soft); line-height:1.8; font-size:14px; }
+  .phd-list li + li{ margin-top:7px; }
+  .phd-wide{ grid-column:1 / -1; }
+  .phd-question{
+    margin:0; padding-left:16px; border-left:3px solid var(--accent);
+    color:var(--ink); font-size:20px; line-height:1.45;
+  }
+  .phd-meta{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px;
+  }
+  .phd-meta div{ padding:12px; background:var(--paper-2); border-radius:8px; }
+  .phd-meta strong{ display:block; margin-bottom:4px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+  .phd-meta span{ color:var(--ink-soft); font-size:13px; }
+  @media (max-width:720px){
+    .phd-grid, .phd-meta{ grid-template-columns:1fr; }
+    .phd-wide{ grid-column:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav__brand">Jakarta <span>Urban Atlas</span></div>
+  <div class="nav__links">
+    <a href="index.html">Home</a>
+    <span class="nav__sep">|</span>
+    <a href="map.html">Map</a>
+    <span class="nav__sep">|</span>
+    <a href="projects.html">Projects</a>
+    <span class="nav__sep">|</span>
+    <a href="about.html">About</a>
+    <span class="nav__sep">|</span>
+    <a href="phd.html" class="is-active">PhD</a>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="section">
+    <header class="phd-hero">
+      <p class="phd-kicker">Research notebook</p>
+      <h1>PhD research draft</h1>
+      <p>A working space for shaping a doctoral research direction at the intersection of urban design,
+         spatial data and climate-responsive transformation in Southeast Asian cities.</p>
+      <span class="draft-note">Working draft &middot; details to be confirmed</span>
+    </header>
+
+    <div class="phd-grid">
+      <article class="phd-panel phd-wide">
+        <h2>Working title</h2>
+        <p class="phd-question">Designing measurable urban resilience: translating spatial evidence into climate-responsive transformation for rapidly changing Southeast Asian cities.</p>
+        <div class="phd-meta">
+          <div><strong>Status</strong><span>Concept development</span></div>
+          <div><strong>Geography</strong><span>Southeast Asia</span></div>
+          <div><strong>Discipline</strong><span>Urban design &amp; spatial planning</span></div>
+        </div>
+      </article>
+
+      <article class="phd-panel">
+        <h2>Why this matters</h2>
+        <p>Urban plans often contain strong ambitions for resilience, inclusion and low-carbon growth, but the connection between those ambitions and measurable spatial outcomes can remain unclear.</p>
+        <p>This research would explore how spatial analysis and design frameworks can work together to make those outcomes more visible, testable and useful in decision-making.</p>
+      </article>
+
+      <article class="phd-panel">
+        <h2>Research objectives</h2>
+        <ul class="phd-list">
+          <li>Identify spatial indicators that help describe climate-responsive urban transformation.</li>
+          <li>Test how GIS-based evidence can inform design choices at city, corridor and neighbourhood scales.</li>
+          <li>Develop a practical framework for translating analysis into implementable urban strategies.</li>
+        </ul>
+      </article>
+
+      <article class="phd-panel">
+        <h2>Potential methods</h2>
+        <ul class="phd-list">
+          <li>Literature and policy review across selected Southeast Asian cities.</li>
+          <li>Comparative spatial analysis using open geospatial and remote-sensing data.</li>
+          <li>Case-study design testing with scenario mapping and stakeholder input.</li>
+          <li>Evaluation of the framework through measurable spatial criteria.</li>
+        </ul>
+      </article>
+
+      <article class="phd-panel">
+        <h2>Possible contribution</h2>
+        <p>A design-led research framework that helps practitioners connect spatial evidence, climate objectives and urban form. The intended result is useful both as an academic contribution and as a repeatable workflow for planning practice.</p>
+      </article>
+
+      <article class="phd-panel phd-wide">
+        <h2>Next questions</h2>
+        <ul class="phd-list">
+          <li>Which climate and urban performance outcomes should the research prioritise?</li>
+          <li>What scale best connects city-wide policy with neighbourhood-level design decisions?</li>
+          <li>Which case studies offer the clearest comparison and strongest access to reliable data?</li>
+          <li>How can the research remain rigorous without losing practical value for designers and planners?</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  Jakarta Urban Atlas &middot; Built with Mapbox GL JS
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jakarta Urban Atlas &mdash; Map</title>
+<link rel="stylesheet" href="assets/site.css" />
+<script src="assets/site.js" defer></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --ink:#101418; --muted:#5d6874; --line:#e4e8ec;
+    --accent:#ed1c24; --accent-soft:#ffe6e6; --bg-soft:#f2f2f2;
+  }
+
+  /* ---------- layout ---------- */
+  .map-wrap{
+    position:relative; width:100%; height:calc(100vh - 132px); min-height:560px;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    overflow:hidden; background:var(--bg-soft);
+  }
+  #map{ position:absolute; inset:0; }
+
+  /* ---------- floating title ---------- */
+  .map-title{
+    position:absolute; top:18px; left:18px; z-index:5;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(6px);
+    border:1px solid var(--line); border-radius:12px; padding:14px 16px; max-width:290px;
+    box-shadow:0 6px 20px rgba(16,20,24,.10);
+  }
+  .map-title h2{ margin:0 0 5px; font-size:17px; }
+  .map-title p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.6; }
+
+  /* ---------- legend ---------- */
+  .legend{
+    position:absolute; bottom:18px; left:18px; z-index:5;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(6px);
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    box-shadow:0 6px 20px rgba(16,20,24,.10); font-size:12px; color:var(--muted);
+  }
+  .legend b{ display:block; color:var(--ink); font-size:11px; letter-spacing:.8px;
+             text-transform:uppercase; margin-bottom:8px; }
+  .legend-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; }
+  .legend-row:last-child{ margin-bottom:0; }
+  .legend-row.is-off{ opacity:.35; }
+  .legend-dot{ width:12px; height:12px; border-radius:50%; border:2px solid #fff;
+               box-shadow:0 0 0 1px rgba(16,20,24,.18); flex:none; }
+
+  /* ---------- markers ---------- */
+  .pin{
+    width:30px; height:30px; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:14px; font-weight:700; border:2.5px solid #fff;
+    box-shadow:0 3px 10px rgba(16,20,24,.35);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .pin:hover, .pin.is-active{
+    transform:scale(1.35); box-shadow:0 6px 18px rgba(16,20,24,.45); z-index:9;
+  }
+  .pin.is-dim{ opacity:.25; }
+
+  /* ---------- hover panel ---------- */
+  .panel{
+    position:absolute; top:18px; right:18px; bottom:18px; width:340px; z-index:6;
+    background:rgba(255,255,255,.97); backdrop-filter:blur(8px);
+    border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    box-shadow:0 10px 30px rgba(16,20,24,.16);
+    display:flex; flex-direction:column;
+    transform:translateX(18px); opacity:0; pointer-events:none;
+    transition:transform .25s ease, opacity .25s ease;
+  }
+  .panel.is-on{ transform:translateX(0); opacity:1; pointer-events:auto; }
+
+  .panel__img{ width:100%; height:180px; object-fit:cover; display:block; flex:none; background:var(--bg-soft); }
+  .panel__body{ padding:16px 18px 20px; overflow-y:auto; }
+  .panel__cat{ font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+               font-weight:700; margin-bottom:6px; }
+  .panel__title{ margin:0 0 4px; font-size:17px; line-height:1.3; }
+  .panel__place{ margin:0 0 2px; font-size:13px; color:var(--muted); }
+  .panel__year{ margin:0 0 12px; font-size:12px; color:var(--muted); }
+  .panel__role{
+    font-size:12px; color:#144a9e; background:var(--accent-soft);
+    padding:6px 10px; border-radius:8px; display:inline-block; margin-bottom:12px;
+  }
+  .panel__body p.desc{ margin:0 0 14px; font-size:13px; color:#39424d; line-height:1.68; }
+  .panel__tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .panel__tag{ background:var(--bg-soft); border:1px solid var(--line);
+               color:var(--muted); font-size:11.5px; padding:4px 9px; border-radius:999px; }
+  .panel__link{ display:inline-block; margin-top:14px; font-size:12.5px;
+                color:var(--accent); text-decoration:none; }
+  .panel__link:hover{ text-decoration:underline; }
+
+  /* ---------- idle hint ---------- */
+  .hint{
+    position:absolute; top:18px; right:18px; z-index:5;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(6px);
+    border:1px solid var(--line); border-radius:12px; padding:13px 16px;
+    font-size:12.5px; color:var(--muted); max-width:230px; line-height:1.6;
+    box-shadow:0 6px 20px rgba(16,20,24,.10);
+    transition:opacity .25s ease;
+  }
+  .hint.is-off{ opacity:0; pointer-events:none; }
+
+  .note{ font-size:12px; color:var(--muted); font-style:italic; margin:16px 0 0; }
+
+  @media (max-width:820px){
+    .panel{ left:12px; right:12px; width:auto; top:auto; bottom:12px; max-height:56%; }
+    .panel__img{ height:120px; }
+    .map-title{ max-width:calc(100% - 36px); }
+    .hint{ display:none; }
+  }
+</style>
+</head>
+<body>
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav__brand">Jakarta <span>Urban Atlas</span></div>
+  <div class="nav__links">
+    <a href="index.html">Home</a>
+    <span class="nav__sep">|</span>
+    <a href="map.html" class="is-active">Map</a>
+    <span class="nav__sep">|</span>
+    <a href="projects.html">Projects</a>
+    <span class="nav__sep">|</span>
+    <a href="about.html">About</a>
+    <span class="nav__sep">|</span>
+    <a href="phd.html">PhD</a>
+  </div>
+</nav>
+
+<div class="map-wrap">
+  <div id="map"></div>
+
+  <div class="map-title">
+    <h2>Project Locations</h2>
+    <p>Nine urban design and masterplanning projects across Southeast Asia. Hover a marker to see the project.</p>
+  </div>
+
+  <div class="legend" id="legend"><b>Category</b></div>
+
+  <div class="hint" id="hint">Hover over any marker to open the project panel. Click to zoom in and show the project boundary.</div>
+
+  <aside class="panel" id="panel">
+    <img class="panel__img" id="pImg" src="" alt="" />
+    <div class="panel__body">
+      <div class="panel__cat" id="pCat"></div>
+      <h3 class="panel__title" id="pTitle"></h3>
+      <p class="panel__place" id="pPlace"></p>
+      <p class="panel__year" id="pYear"></p>
+      <div class="panel__role" id="pRole"></div>
+      <p class="desc" id="pDesc"></p>
+      <div class="panel__tags" id="pTags"></div>
+      <a class="panel__link" href="projects.html">View full portfolio &rarr;</a>
+    </div>
+  </aside>
+</div>
+
+<main class="page">
+  <section class="section">
+    <p class="note">Marker positions and boundary outlines are indicative placeholders drawn at
+       approximate city or district scale &mdash; they are not official administrative boundaries or
+       surveyed project extents. Replace <code>data/project-boundaries.geojson</code> with authoritative
+       geometry before any external use. Imagery is AI-generated for presentation purposes.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  Jakarta Urban Atlas &middot; Built with Mapbox GL JS
+</footer>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiZmVicnlrdXN1bWEiLCJhIjoiY211ZTkwdnJ4MDE0dDM0cnp6amNvemVpYyJ9.abLQdfDr-H8dJ56manpjSQ';
+
+/* ============ CATEGORY COLOURS ============ */
+var CATS = {
+  'Masterplanning' : '#1f6feb',
+  'Mobility & TOD' : '#12b3a8',
+  'Urban Strategy' : '#f0883e',
+  'Public Realm'   : '#a371f7'
+};
+
+/* ============ PROJECT DATA ============
+   lng/lat are approximate city-level positions — edit freely. */
+var PROJECTS = [
+  { n:1, zoom:13.0, cat:'Masterplanning', lng:115.2437, lat:-8.7285,
+    img:'assets/img/01-kura-kura-bali.png',
+    title:'Masterplan &amp; Infrastructure Improvement',
+    place:'Kura-Kura Bali, Indonesia', year:'2026&ndash;Present',
+    role:'Planning coordination lead',
+    desc:"Planning coordination for the enhancement of Kura-Kura Bali's infrastructure strategy, aligning infrastructure planning, utilities, resilience objectives and development phasing with a 500-hectare mixed-use island masterplan.",
+    tags:['500 ha','Mixed-use island','Infrastructure strategy','Phasing'] },
+
+  { n:2, zoom:10.5, cat:'Masterplanning', lng:123.9622, lat:11.1283,
+    img:'assets/img/02-medellin-cebu.png',
+    title:'Medellin Visioning Masterplan',
+    place:'Northern Cebu, The Philippines', year:'2026&ndash;Present',
+    role:'Urban designer',
+    desc:'A 1,000+ hectare township development in Northern Cebu, covering GIS-based site analysis, multi-criteria suitability assessments, land use planning, scenario testing and baseline studies for a resilient mixed-use masterplan.',
+    tags:['1,000+ ha','Suitability analysis','Scenario testing','Township'] },
+
+  { n:3, zoom:10.6, cat:'Mobility &amp; TOD', lng:107.6191, lat:-6.9175,
+    img:'assets/img/03-corridor-tod.png',
+    title:'Integrated Corridor Development',
+    place:'Bandung Basin Metropolitan Area, Indonesia', year:'2025&ndash;Present',
+    role:'TOD planning lead',
+    desc:'TOD planning and spatial development strategies supporting BRT implementation through station area planning, mobility integration and urban regeneration, with NMT networks and implementation guidance for scalable delivery.',
+    tags:['TOD','BRT','Station area planning','NMT networks'] },
+
+  { n:4, zoom:12.4, cat:'Masterplanning', lng:103.5228, lat:10.6270,
+    img:'assets/img/04-green-sez.png',
+    title:'Green Special Economic Zone',
+    place:'Cambodia', year:'2025',
+    role:'Urban designer',
+    desc:'Masterplan for a 150-hectare Green Special Economic Zone through land-use frameworks, green infrastructure strategies, public realm concepts and connectivity plans supporting ESG, circular economy and renewable energy objectives.',
+    tags:['150 ha','ESG','Circular economy','Green infrastructure'] },
+
+  { n:5, zoom:10.9, cat:'Masterplanning', lng:109.6753, lat:-6.9100,
+    img:'assets/img/05-industrial-township.png',
+    title:'Industrial Estate Master Plan Development',
+    place:'Indonesia', year:'2023&ndash;2025',
+    role:'Digital Integration Lead &amp; Urban Designer',
+    desc:'A 2,400-hectare industrial township masterplan with multidisciplinary coordination across planning, infrastructure, transport, sustainability and engineering, streamlined through advanced GIS&ndash;CAD&ndash;FME workflows.',
+    tags:['2,400 ha','GIS–CAD–FME','Land use framework','Digital delivery'] },
+
+  { n:6, zoom:9.9, cat:'Urban Strategy', lng:106.8451, lat:-6.2088,
+    img:'assets/img/06-climate-smart-jakarta.png',
+    title:'Climate-Smart Urban Transformation',
+    place:'Jakarta, Indonesia', year:'2023&ndash;2024',
+    role:'Spatial analysis lead',
+    desc:'Spatial analysis, opportunity assessments and urban transformation studies supporting climate-smart development strategies, identifying priority intervention areas for resilience, regeneration, public realm and mobility.',
+    tags:['Climate resilience','Multi-criteria analysis','Regeneration','Evidence-based planning'] },
+
+  { n:7, zoom:10.3, cat:'Mobility &amp; TOD', lng:115.2126, lat:-8.6705,
+    img:'assets/img/07-sarbagita-brt.png',
+    title:'Sarbagita eBus Rapid Transit System',
+    place:'Bali, Indonesia', year:'2023&ndash;2024',
+    role:'Urban design lead',
+    desc:"Urban design development of station typologies, public realm interventions and corridor integration strategies for Bali's eBus Rapid Transit programme, reflecting local culture, climate and mobility needs.",
+    tags:['eBRT','Station typology','Corridor integration','Local identity'] },
+
+  { n:8, zoom:9.4, cat:'Urban Strategy', lng:116.7000, lat:-0.9500,
+    img:'assets/img/08-nusantara.png',
+    title:'Scoping Study &mdash; Liveable and Lovable Nusantara',
+    place:'Nusantara, Indonesia', year:'2023&ndash;2024',
+    role:'Research &amp; visual communication',
+    desc:"ADB-funded strategic advisory study for Indonesia's new capital, identifying transformative investment opportunities and enhancing long-term liveability through research, international benchmarking and stakeholder engagement.",
+    tags:['ADB','Liveability','Benchmarking','Investment prioritisation'] },
+
+  { n:9, zoom:10.2, cat:'Public Realm', lng:106.1057, lat:-6.3086,
+    img:'assets/img/09-pandeglang.png',
+    title:'Open Public Space Regeneration',
+    place:'Pandeglang, Indonesia', year:'2016&ndash;2018',
+    role:'Design lead',
+    desc:'Regeneration of twelve underutilised public spaces, transforming neglected sites into accessible community destinations through concept development, streetscape strategies and stakeholder engagement with local government.',
+    tags:['12 sites','Streetscape','Walkability','Community engagement'] }
+];
+
+/* ============ MAP ============ */
+var map = new mapboxgl.Map({
+  container:'map',
+  style:'mapbox://styles/mapbox/light-v11',
+  center:[112.5, -3.5],
+  zoom:4.1,
+  attributionControl:true
+});
+map.addControl(new mapboxgl.NavigationControl({ showCompass:false }), 'bottom-right');
+
+/* ============ BOUNDARY LAYERS (GeoJSON) ============ */
+var boundaryReady = false;
+
+map.on('load', function(){
+  map.addSource('boundaries', {
+    type:'geojson',
+    data:'data/project-boundaries.geojson'
+  });
+
+  // colour each polygon by its category
+  var catColour = ['match', ['get','category'],
+    'Masterplanning', CATS['Masterplanning'],
+    'Mobility & TOD', CATS['Mobility & TOD'],
+    'Urban Strategy', CATS['Urban Strategy'],
+    'Public Realm',   CATS['Public Realm'],
+    '#1f6feb'];
+
+  map.addLayer({
+    id:'boundary-fill', type:'fill', source:'boundaries',
+    filter:['==', ['get','id'], -1],          // hidden until a project is picked
+    paint:{ 'fill-color':catColour, 'fill-opacity':0.18 }
+  });
+
+  map.addLayer({
+    id:'boundary-line', type:'line', source:'boundaries',
+    filter:['==', ['get','id'], -1],
+    paint:{ 'line-color':catColour, 'line-width':2.4, 'line-dasharray':[2,1.4] }
+  });
+
+  boundaryReady = true;
+});
+
+function showBoundary(id){
+  if (!boundaryReady) return;
+  map.setFilter('boundary-fill', ['==', ['get','id'], id]);
+  map.setFilter('boundary-line', ['==', ['get','id'], id]);
+}
+
+function clearBoundary(){
+  if (!boundaryReady) return;
+  map.setFilter('boundary-fill', ['==', ['get','id'], -1]);
+  map.setFilter('boundary-line', ['==', ['get','id'], -1]);
+}
+
+/* ============ MARKERS ============ */
+var panel = document.getElementById('panel');
+var hint  = document.getElementById('hint');
+var markerEls = [];
+var lockedTo = null;   // set when a marker is clicked
+
+function plainCat(c){ return c.replace('&amp;','&'); }
+
+function showPanel(p){
+  document.getElementById('pImg').src = p.img;
+  document.getElementById('pImg').alt = p.title.replace(/&[a-z]+;/g,'');
+  var cat = document.getElementById('pCat');
+  cat.innerHTML = p.cat;
+  cat.style.color = CATS[plainCat(p.cat)];
+  document.getElementById('pTitle').innerHTML = p.title;
+  document.getElementById('pPlace').innerHTML = p.place;
+  document.getElementById('pYear').innerHTML  = p.year;
+  document.getElementById('pRole').innerHTML  = p.role;
+  document.getElementById('pDesc').innerHTML  = p.desc;
+  document.getElementById('pTags').innerHTML  = p.tags.map(function(t){
+    return '<span class="panel__tag">' + t + '</span>';
+  }).join('');
+  panel.classList.add('is-on');
+  hint.classList.add('is-off');
+}
+
+function hidePanel(){
+  if (lockedTo !== null) return;
+  panel.classList.remove('is-on');
+  hint.classList.remove('is-off');
+}
+
+PROJECTS.forEach(function(p, i){
+  var el = document.createElement('div');
+  el.className = 'pin';
+  el.style.background = CATS[plainCat(p.cat)];
+  el.textContent = p.n;
+  el.setAttribute('data-cat', plainCat(p.cat));
+  el.title = p.title.replace(/&[a-z]+;/g,'');
+
+  el.addEventListener('mouseenter', function(){
+    el.classList.add('is-active');
+    showPanel(p);
+  });
+  el.addEventListener('mouseleave', function(){
+    if (lockedTo !== i) el.classList.remove('is-active');
+    hidePanel();
+  });
+  el.addEventListener('click', function(e){
+    e.stopPropagation();
+    markerEls.forEach(function(m){ m.classList.remove('is-active'); });
+    el.classList.add('is-active');
+    lockedTo = i;
+    showPanel(p);
+    showBoundary(p.n);
+    map.flyTo({ center:[p.lng, p.lat], zoom:p.zoom || 10.5, speed:.9, essential:true });
+  });
+
+  markerEls.push(el);
+  new mapboxgl.Marker({ element:el, anchor:'center' })
+    .setLngLat([p.lng, p.lat])
+    .addTo(map);
+});
+
+/* click empty map -> release lock and reset view */
+map.on('click', function(){
+  if (lockedTo === null) return;
+  lockedTo = null;
+  markerEls.forEach(function(m){ m.classList.remove('is-active'); });
+  hidePanel();
+  clearBoundary();
+  map.flyTo({ center:[112.5, -3.5], zoom:4.1, speed:.8 });
+});
+
+/* ============ LEGEND + FILTER ============ */
+var legend = document.getElementById('legend');
+var off = {};
+Object.keys(CATS).forEach(function(c){
+  var row = document.createElement('div');
+  row.className = 'legend-row';
+  row.innerHTML = '<span class="legend-dot" style="background:' + CATS[c] + '"></span>' + c;
+  row.addEventListener('click', function(){
+    off[c] = !off[c];
+    row.classList.toggle('is-off', off[c]);
+    markerEls.forEach(function(el){
+      el.classList.toggle('is-dim', !!off[el.getAttribute('data-cat')]);
+    });
+  });
+  legend.appendChild(row);
+});
+</script>
+</body>
+</html>

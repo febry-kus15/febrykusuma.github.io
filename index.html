@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jakarta Urban Atlas &mdash; Home</title>
+<link rel="stylesheet" href="assets/site.css" />
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="nav__brand">Jakarta <span>Urban Atlas</span></div>
+  <div class="nav__links">
+    <a href="index.html" class="is-active">Home</a>
+    <span class="nav__sep">|</span>
+    <a href="map.html">Map</a>
+    <span class="nav__sep">|</span>
+    <a href="projects.html">Projects</a>
+    <span class="nav__sep">|</span>
+    <a href="about.html">About</a>
+    <span class="nav__sep">|</span>
+    <a href="phd.html">PhD</a>
+  </div>
+</nav>
+
+<main class="page">
+
+  <!-- ============ PARALLAX 1 ============ -->
+  <section class="parallax" style="background-image:url('assets/hero-skyline.png')">
+    <div class="parallax__inner">
+      <p class="parallax__kicker">Urban Design &middot; Jakarta, Indonesia</p>
+      <h1>Reading the city, one layer at a time</h1>
+      <p>An interactive atlas for exploring Jakarta&rsquo;s form, movement and
+         growth &mdash; built on open geospatial data and live web mapping.</p>
+      <a href="map.html" class="btn btn--solid">Open the map</a>
+    </div>
+    <div class="scroll-cue">Scroll</div>
+  </section>
+
+  <!-- ============ PARALLAX 2 ============ -->
+  <section class="parallax" style="background-image:url('assets/hero-street.png')">
+    <div class="parallax__inner">
+      <p class="parallax__kicker">02 &mdash; Context</p>
+      <h2>Density, informality and the space in between</h2>
+      <p>Jakarta holds towers and kampung side by side. Understanding how these
+         grains meet &mdash; at the street, the block, the corridor &mdash; is where
+         meaningful planning decisions begin.</p>
+      <a href="#layers" class="btn btn--ghost">What&rsquo;s inside</a>
+    </div>
+  </section>
+
+  <!-- ============ PARALLAX 3 ============ -->
+  <section class="parallax" style="background-image:url('assets/hero-plan.png')">
+    <div class="parallax__inner">
+      <p class="parallax__kicker">03 &mdash; Method</p>
+      <h2>From GIS analysis to a map anyone can open</h2>
+      <p>Spatial data prepared in QGIS and Python, published straight to the
+         browser with Mapbox GL JS &mdash; no licence, no install, just a link.</p>
+      <a href="about.html" class="btn btn--ghost">About the developer</a>
+    </div>
+  </section>
+
+  <!-- ============ CONTENT ============ -->
+  <section class="section" id="layers">
+    <h2>What&rsquo;s in the atlas</h2>
+    <p class="lede">Each layer is a GeoJSON file you can swap out with your own
+       project data &mdash; masterplan parcels, road hierarchy, catchments, anything
+       exported from QGIS in EPSG:4326.</p>
+
+    <div class="cards">
+      <div class="card">
+        <h4>Base map</h4>
+        <p>Four Mapbox styles &mdash; streets, light, dark and satellite &mdash;
+           switchable from the map panel.</p>
+      </div>
+      <div class="card">
+        <h4>Project layers</h4>
+        <p>Drop GeoJSON into <code>/data</code>, register it in the layer list,
+           and it appears with a toggle.</p>
+      </div>
+      <div class="card">
+        <h4>Attribute popups</h4>
+        <p>Click any feature to read its attribute table entries in a formatted
+           popup.</p>
+      </div>
+    </div>
+
+    <h3>Getting started</h3>
+    <p>Run a local server from this folder, then open
+       <code>http://localhost:8000</code>. The map page is where the geospatial
+       work happens; this page is the front door.</p>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Jakarta Urban Atlas &middot; Built with Mapbox GL JS
+</footer>
+
+</body>
+</html>
